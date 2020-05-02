@@ -1,51 +1,40 @@
 import Leap from "leapjs";
-import { clamp, throttle, get, getOr } from "lodash/fp";
+
 import {
   setBright,
   setOn,
   setOff,
   increaseColorTemperature,
   decreaseColorTemperature,
-} from "./actions";
+} from "./old/actions";
 
-const throttledSetBright = throttle(200, setBright);
-const throttledIncreaseColorTemperature = throttle(
-  200,
-  increaseColorTemperature
-);
-const throttledDecreaseColorTemperature = throttle(
-  200,
-  decreaseColorTemperature
-);
-const throttledLog = throttle(50, console.log);
+import { fromEvent, Subject, from, of, asyncScheduler } from "rxjs";
+import {
+  tap,
+  pluck,
+  map,
+  scan,
+  groupBy,
+  multicast,
+  concatAll,
+  merge,
+  concatMap,
+  mergeMap,
+  throttleTime,
+  filter,
+} from "rxjs/operators";
 
-const controller = Leap.loop(
-  { enableGestures: true },
-  (frame) => {
-    const hand = frame.hands[0];
+const controller = Leap.loop({ enableGestures: true }, () => null);
 
-    if (hand) {
-      const centerCorrectionFactor = hand.type === "right" ? 0.5 : -0.5;
-      const sensitivyFactor = 2;
-      const angle = clamp(
-        0,
-        1,
-        (hand.roll() / Math.PI) * sensitivyFactor + 0.5 + centerCorrectionFactor
-      );
-
-      const correctedAngle = hand.type === "right" ? 1 - angle : angle;
-      const value = clamp(1, 99, Math.floor(correctedAngle * 100));
-      hand.sphereRadius > 80 && throttledSetBright(value, "smooth", 200);
-    }
+const onCircleHandler = (gesture) => {
+  if (gesture.normal[2] > 0.5 && gesture.normal[2] <= 1) {
+    decreaseColorTemperature(5, 200);
+  } else if (gesture.normal[2] < -0.5 && gesture.normal[2] >= -1) {
+    increaseColorTemperature(5, 200);
   }
-  //   console.log(frame.gestures.length)
-);
+};
 
-const circleGestureMap = {};
-controller.on("gesture", (gesture) => {
-  const { hands, ...base } = gesture;
-  // console.log(base);
-
+const onSwipeHandler = (gesture) => {
   if (gesture.type === "swipe" && gesture.state === "stop") {
     if (gesture.direction[1] > 0.5 && gesture.direction[1] <= 1) {
       console.log("ON");
@@ -55,35 +44,32 @@ controller.on("gesture", (gesture) => {
       setOff();
     }
   }
+};
 
-  if (gesture.type === "circle" && gesture.state === "update") {
-    if (gesture.normal[2] > 0.5 && gesture.normal[2] <= 1) {
-      // const previousGestureState = get(gesture.id, circleGestureMap);
+const handlers = { circle: onCircleHandler, swipe: onSwipeHandler };
 
-      // console.log(
-      //   getOr(0, "lastProgress", previousGestureState),
-      //   gesture.progress - getOr(0, "lastProgress", previousGestureState)
-      // );
-      // if (
-      //   gesture.progress - getOr(0, "lastProgress", previousGestureState) >=
-      //   0.2
-      // ) {
-      //   clearTimeout(get("timeout", previousGestureState));
-      //   decreaseColorTemperature();
-      //   circleGestureMap[gesture.id] = {
-      //     timeout: setTimeout(() => {
-      //       console.log("decrease", circleGestureMap);
-      //       delete circleGestureMap[gesture.id];
-      //       console.log(circleGestureMap);
-      //     }, 500),
-      //     lastProgress: gesture.progress,
-      //   };
-      // }
+const gestures = fromEvent(controller, "gesture").pipe(
+  mergeMap((values) => of(...values)),
+  groupBy((gesture) => gesture.type),
+  filter((group) => group.key in handlers),
+  map((group) => {
+    const gestureType = group.key;
 
-      throttledDecreaseColorTemperature();
-    } else if (gesture.normal[2] < -0.5 && gesture.normal[2] >= -1) {
-      console.log("increase");
-      throttledIncreaseColorTemperature();
+    if (gestureType in handlers) {
+      return group
+        .pipe(
+          throttleTime(200, asyncScheduler, { leading: true, trailing: true })
+        )
+        .subscribe(handlers[group.key]);
+    } else {
+      return group;
     }
-  }
-});
+  })
+);
+
+gestures.subscribe(console.log);
+
+// subject1.subscribe((value) => console.log("1: ", value));
+// subject2.subscribe((value) => console.log("2: ", value[0].type));
+
+// multicasted.connect();
