@@ -1,0 +1,31 @@
+{
+  "name": "yeelight-connector",
+  "version": "1.0.0",
+  "description": "Connectors function to control Mi Bulb",
+  "author": "Hugo Raynal raynalhugo@gmail.com",
+  "license": "MIT",
+  "private": true,
+  "main": "lib/index.cjs.js",
+  "types": "lib/index.d.ts",
+  "scripts": {
+    "start": "babel-node ./src/script.js",
+    "search": "babel-node ./src/search.js",
+    "build": "rollup -c"
+  },
+  "devDependencies": {
+    "@babel/cli": "7.8.4",
+    "@babel/core": "7.9.0",
+    "@babel/node": "7.8.7",
+    "@babel/plugin-proposal-throw-expressions": "7.8.3",
+    "@babel/preset-env": "^7.9.6",
+    "@babel/preset-typescript": "^7.9.0",
+    "babel-plugin-lodash": "^3.3.4",
+    "rollup": "^2.7.2",
+    "rollup-plugin-babel": "^4.4.0",
+    "rollup-plugin-pnp-resolve": "^2.0.0"
+  },
+  "dependencies": {
+    "lodash": "4.17.15",
+    "rollup-plugin-commonjs": "^10.1.0"
+  }
+}

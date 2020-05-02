@@ -1,0 +1,36 @@
+Arguments: 
+  /Users/hugo/.nvm/versions/node/v10.15.3/bin/node /Users/hugo/.yarn/bin/yarn.js init
+
+PATH: 
+  /Users/hugo/.yarn/bin:/Users/hugo/.config/yarn/global/node_modules/.bin:/Users/hugo/.pyenv/shims:/Users/hugo/.cargo/bin:/Users/hugo/.local/bin:/Users/hugo/Library/Android/sdk/platform-tools:/Users/hugo/.nvm/versions/node/v10.15.3/bin:/Users/hugo/.pyenv/shims:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Users/hugo/.pyenv/bin
+
+Yarn version: 
+  1.22.0
+
+Node version: 
+  10.15.3
+
+Platform: 
+  darwin x64
+
+Trace: 
+  Error: canceled
+      at Interface.<anonymous> (/Users/hugo/.yarn/lib/cli.js:136987:13)
+      at Interface.emit (events.js:189:13)
+      at Interface._ttyWrite (readline.js:783:16)
+      at ReadStream.onkeypress (readline.js:168:10)
+      at ReadStream.emit (events.js:189:13)
+      at emitKeys (internal/readline.js:424:14)
+      at emitKeys.next (<anonymous>)
+      at ReadStream.onData (readline.js:1022:36)
+      at ReadStream.emit (events.js:189:13)
+      at addChunk (_stream_readable.js:284:12)
+
+npm manifest: 
+  No manifest
+
+yarn manifest: 
+  No manifest
+
+Lockfile: 
+  No lockfile

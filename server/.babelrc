@@ -1,0 +1,16 @@
+{
+  "presets": ["@babel/preset-env"],
+  "plugins": [
+    "@babel/plugin-proposal-throw-expressions",
+    [
+      "module-resolver",
+      {
+        "root": ["./src"],
+        "alias": {
+          "yeelight-connector": "../connector"
+        }
+      }
+    ],
+    "lodash"
+  ]
+}

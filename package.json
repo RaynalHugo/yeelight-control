@@ -1,0 +1,16 @@
+{
+  "name": "yeelight",
+  "version": "1.0.0",
+  "description": "Monorepo packag",
+  "main": "index.js",
+  "author": "Hugo Raynal <raynalhugo@gmail.com>",
+  "license": "MIT",
+  "private": true,
+  "workspaces": {
+    "packages": [
+      "connector",
+      "leap",
+      "server"
+    ]
+  }
+}
