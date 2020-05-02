@@ -1,0 +1,17 @@
+# dependencies
+*/node_modules
+*/.pnp
+*/.pnp.js
+*/.yarn
+
+/node_modules
+/.pnp
+.pnp.js
+.yarn
+
+# production
+web/build
+
+# misc
+.DS_Store
+*/.DS_Store
