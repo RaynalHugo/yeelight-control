@@ -1,64 +1,59 @@
 import Leap from "leapjs";
 
+import { connectToBulb, write$ } from "./connect";
+import { handlers } from "./handlers";
+
+import { fromEvent, of, asyncScheduler, from } from "rxjs";
 import {
-  setOn,
-  setOff,
-  increaseColorTemperature,
-  decreaseColorTemperature,
-  increaseBrightness,
-  decreaseBrightness,
-} from "./old/actions";
+  tap,
+  filter,
+  groupBy,
+  map,
+  mergeMap,
+  throttleTime,
+  withLatestFrom,
+  catchError,
+} from "rxjs/operators";
 
-import { fromEvent, of, asyncScheduler } from "rxjs";
-import { map, groupBy, mergeMap, throttleTime, filter } from "rxjs/operators";
-
+connectToBulb();
 const controller = Leap.loop({ enableGestures: true }, () => null);
 
-const onCircleHandler = (gesture) => {
-  if (gesture.normal[2] > 0.5 && gesture.normal[2] <= 1) {
-    increaseColorTemperature(5, 200);
-  } else if (gesture.normal[2] < -0.5 && gesture.normal[2] >= -1) {
-    decreaseColorTemperature(5, 200);
-  }
-};
+// hardcoded bulb id observable
+const bulbId$ = of(0x0000000007d02fcc);
 
-const onSwipeHandler = (gesture) => {
-  //   if (gesture.type === "swipe") {
-  console.log(gesture.direction);
-  if (gesture.direction[1] > 0.5 && gesture.direction[1] <= 1) {
-    setOn();
-  } else if (gesture.direction[1] < -0.5 && gesture.direction[1] >= -1) {
-    setOff();
-  } else {
-    if (gesture.direction[0] > 0.5 && gesture.direction[0] <= 1) {
-      decreaseBrightness(10, 200);
-    } else if (gesture.direction[0] < -0.5 && gesture.direction[0] >= -1) {
-      increaseBrightness(10, 200);
-    }
-  }
-  //   }
-};
-
-const handlers = { circle: onCircleHandler, swipe: onSwipeHandler };
-
-const gestures = fromEvent(controller, "gesture").pipe(
-  mergeMap((values) => of(...values)),
+// create gesture commands
+const gestures$ = fromEvent(controller, "gesture").pipe(
+  mergeMap((values) => from(values)),
   throttleTime(200, asyncScheduler, { leading: true, trailing: true }),
   groupBy((gesture) => gesture.type),
-  filter((group) => group.key in handlers),
-  map((group) => {
-    const gestureType = group.key;
-
-    if (gestureType in handlers) {
-      return group
-        .pipe
-        //   throttleTime(200, asyncScheduler, { leading: true, trailing: true })
-        ()
-        .subscribe(handlers[group.key]);
-    } else {
-      return group;
-    }
-  })
+  filter((group$) => group$.key in handlers),
+  mergeMap((group$) => handlers[group$.key](group$))
 );
 
-gestures.subscribe(console.log);
+// Apply id to commands
+const commands$ = gestures$.pipe(
+  withLatestFrom(bulbId$),
+  map(([addIdToCommand, id]) => addIdToCommand(id)),
+  tap((command) =>
+    console.log(
+      `${new Date(
+        Date.now()
+      ).toISOString()} - Sent command: ${command.substring(
+        0,
+        command.length - 2
+      )}`
+    )
+  ),
+  withLatestFrom(write$),
+  catchError((err, caught) => {
+    console.log(
+      `${new Date(Date.now()).toISOString()} - Caught the following error:`,
+      err
+    );
+    connectToBulb();
+    return caught;
+  }),
+  map(([command, writeCommand]) => writeCommand(command))
+);
+
+commands$.subscribe();

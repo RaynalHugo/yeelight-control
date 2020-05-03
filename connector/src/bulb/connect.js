@@ -4,7 +4,9 @@ import { get } from "lodash/fp";
 export async function connect(address, port, id) {
   const client = new net.Socket();
 
-  client.on("error", (...args) => console.log("error", ...args));
+  client.on("error", (...args) => {
+    console.log("error", ...args);
+  });
   client.on("data", (buffer) => console.log("data2", buffer.toString()));
 
   await client.connect(port, address, function() {
