@@ -72,3 +72,17 @@ export const decreaseColorTemperature = async (value = 10, duration = 200) => {
     params: [-value, duration],
   });
 };
+
+export const increaseBrightness = async (value = 10, duration = 200) => {
+  await globalAppoint.command({
+    method: "adjust_bright",
+    params: [value, duration],
+  });
+};
+
+export const decreaseBrightness = async (value = 10, duration = 200) => {
+  await globalAppoint.command({
+    method: "adjust_bright",
+    params: [-value, duration],
+  });
+};
