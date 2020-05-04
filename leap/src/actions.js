@@ -1,5 +1,6 @@
 import net from "net";
 import { Bulb } from "yeelight-connector";
+import { log } from "./logger";
 
 const BULB_PORT = 55443;
 const HOST = "192.168.0.16";
@@ -10,17 +11,17 @@ const setup = async () => {
   await appoint.init();
 
   const server = new net.Server();
-  server.on("error", (error) => console.log("error", error));
+  server.on("error", (error) => log(`error ${error}`));
   server.on("connection", (socket) => {
-    socket.on("error", (error) => console.log("error", error));
+    socket.on("error", (error) => log(`error ${error}`));
     // appoint.socket.end();
     // appoint.socket = socket;
-    console.log("Music mode activated");
+    log("Music mode activated");
     globalAppoint = appoint;
   });
 
   server.listen(54321, "192.168.0.19", () =>
-    console.log("listening on 192.168.0.19:54321")
+    log("listening on 192.168.0.19:54321")
   );
 
   // await appoint.command({

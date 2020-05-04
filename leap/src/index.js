@@ -2,6 +2,7 @@ import Leap from "leapjs";
 
 import { connectToBulb, write$ } from "./connect";
 import { handlers } from "./handlers";
+import { log } from "./logger";
 
 import { fromEvent, of, asyncScheduler, from } from "rxjs";
 import {
@@ -35,21 +36,11 @@ const commands$ = gestures$.pipe(
   withLatestFrom(bulbId$),
   map(([addIdToCommand, id]) => addIdToCommand(id)),
   tap((command) =>
-    console.log(
-      `${new Date(
-        Date.now()
-      ).toISOString()} - Sent command: ${command.substring(
-        0,
-        command.length - 2
-      )}`
-    )
+    log(`Sent command: ${command.substring(0, command.length - 2)}`)
   ),
   withLatestFrom(write$),
   catchError((err, caught) => {
-    console.log(
-      `${new Date(Date.now()).toISOString()} - Caught the following error:`,
-      err
-    );
+    log(`Caught the following error: ${err}`);
     connectToBulb();
     return caught;
   }),
