@@ -1,5 +1,7 @@
-import { Subject } from "rxjs";
 import net from "net";
+import { isEqual } from "lodash/fp";
+import { Subject, fromEvent } from "rxjs";
+import { tap, filter, pluck } from "rxjs/operators";
 
 const BULB_PORT = 55443;
 const HOST = "192.168.0.16";
@@ -15,15 +17,24 @@ write$.subscribe({
 
 export const connectToBulb = async () => {
   const client = new net.Socket();
-  client.on("error", (...args) => {
-    console.log(
-      `${new Date(Date.now()).toISOString()} - Caught error: `,
-      ...args
-    );
-    client.destroy();
-    connectToBulb();
-  });
-  client.on("data", (buffer) => {
+
+  fromEvent(client, "error")
+    .pipe(
+      pluck("code"),
+      tap((errorCode) =>
+        console.log(
+          `${new Date(Date.now()).toISOString()} - Caught error: `,
+          errorCode
+        )
+      ),
+      filter(isEqual("ECONNRESET"))
+    )
+    .subscribe(() => {
+      client.destroy();
+      connectToBulb();
+    });
+
+  fromEvent(client, "data").subscribe((buffer) => {
     const data = buffer.toString();
 
     console.log(
